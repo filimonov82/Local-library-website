@@ -1,6 +1,8 @@
 from django.db import models
 from django.urls import reverse
+from datetime import date
 import uuid  # Required for unique book instances
+from django.contrib.auth.models import User
 
 
 class Genre(models.Model):
@@ -48,6 +50,7 @@ class BookInstance(models.Model):
     book = models.ForeignKey('Book', on_delete=models.RESTRICT, null=True)
     imprint = models.CharField(max_length=200)
     due_back = models.DateField(null=True, blank=True)  # Blank/null for available books
+    borrower = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     LOAN_STATUS = (
         ('m', 'Maintenance'),
@@ -66,6 +69,9 @@ class BookInstance(models.Model):
 
     class Meta:
         ordering = ['due_back']
+
+    def is_overdue(self):
+        return bool(self.due_back and date.today() > self.due_back)
 
     def __str__(self):
         # String for representing the Model object.
